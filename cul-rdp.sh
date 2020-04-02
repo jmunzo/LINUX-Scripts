@@ -10,6 +10,9 @@
 #
 ##########################################################
 
+# Set some vars
+ICON=/usr/share/cul/cu_crown.png
+
 # Check for Dependencies
 
 string=""
@@ -69,7 +72,7 @@ FSCREEN=
 varFull=
 
 [ -n "$USER" ] && until xdotool search "xfreerdp-gui" windowactivate key Right Tab 2>/dev/null ; do sleep 0.03; done &
-MAINFORM=$(yad --center --width=480 --title "CULRDP" --item-separator="," \
+MAINFORM=$(yad --center --width=480 --title "CUL RDP" --item-separator="," --window-icon=$ICON \
  --form \
  --field="Workstation" $SERVER "" \
  --field="Domain" $DOMAIN "CC.COLUMBIA.EDU" \
@@ -94,6 +97,31 @@ else
  FSCREEN=""
 fi
 
+if [ "$SERVER" == "" ]; then 
+yad --center --width=480 --window-icon="error" --title "Missing Information" \
+ --text="<b>ERROR: No Workstation Provided!</b>\n\n<i>Please check to make sure your workstation name was entered in the appropriate field!</i>" \
+ --text-align=center --button=gtk-ok --buttons-layout=spread && continue
+
+elif [ "$LOGIN" == "" ]; then 
+yad --center --width=480 --window-icon="error" --title "Missing Information" \
+ --text="<b>ERROR: No UNI Provided!</b>\n\n<i>Please check to make sure your UNI was entered in the appropriate field!</i>" \
+ --text-align=center --button=gtk-ok --buttons-layout=spread && continue
+
+elif [ "$PASSWORD" == "" ]; then 
+ yad --center --width=480 --window-icon="error" --title "Missing Information" \
+ --text="<b>ERROR: No Password Provided!</b>\n\n<i>Please check to make sure your password was entered in the appropriate field!</i>" \
+ --text-align=center --button=gtk-ok --buttons-layout=spread && continue
+
+elif [ "$DOMAIN" == "" ]; then 
+ yad --center --width=480 --window-icon="error" --title "Missing Information" \
+ --text="<b>ERROR: No Domain Provided!</b>\n\n<i>Please check to make sure your domain was entered in the appropriate field!</i>" \
+ --text-align=center --button=gtk-ok --buttons-layout=spread && continue
+
+else
+ yad --center --width=480 --window-icon="gnome-dev-computer" --title "Attempting Connection" \
+ --text="Attempting to connect to remote workstation..." \
+ --text-align=center --no-buttons --timeout=5 && continue
+
 RES=$(xfreerdp \
  /v:"$SERVER".cul.columbia.edu:3389 \
  /sec-tls $GEOMETRY \
@@ -103,8 +131,16 @@ RES=$(xfreerdp \
  /p:"$PASSWORD" \
  /bpp:$BPP \
  /size:$RESOLUTION \
- /sound
-)
+ /sound \
+ /decorations \
+ /window-drag \
+ 2>&1)
+fi
+
+echo $RES | grep --line-buffered -q "ERROR*" && \
+yad --center --image="error" --window-icon="error" --title="Authentication Failure" \
+ --text="<b>Could not authenticate to server\!</b>\n\n<i>Please check to make sure your information was entered correctly.</i>" \
+ --text-align=center --width=480 --button=gtk-ok --buttons-layout=spread && continue
 
 break
 done
