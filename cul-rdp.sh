@@ -74,7 +74,7 @@ varFull=
 [ -n "$USER" ] && until xdotool search "xfreerdp-gui" windowactivate key Right Tab 2>/dev/null ; do sleep 0.03; done &
 MAINFORM=$(yad --center --width=480 --title "CUL RDP" --item-separator="," --window-icon=$ICON \
  --form \
- --field="Workstation" $SERVER "" \
+ --field="Workstation" $SERVER "TS10BU1A1" \
  --field="Domain" $DOMAIN "CC.COLUMBIA.EDU" \
  --field="UNI" $LOGIN "" \
  --field="Password":H $PASSWORD "" \
@@ -120,7 +120,7 @@ elif [ "$DOMAIN" == "" ]; then
 else
  yad --center --width=480 --window-icon="gnome-dev-computer" --title "Attempting Connection" \
  --text="Attempting to connect to remote workstation..." \
- --text-align=center --no-buttons --timeout=5 && continue
+ --text-align=center --no-buttons & yad_pid=$(echo $!)
 
 RES=$(xfreerdp \
  /v:"$SERVER".cul.columbia.edu:3389 \
@@ -136,6 +136,8 @@ RES=$(xfreerdp \
  /window-drag \
  2>&1)
 fi
+
+kill $yad_pid
 
 echo $RES | grep --line-buffered -q "ERROR*" && \
 yad --center --image="error" --window-icon="error" --title="Authentication Failure" \
